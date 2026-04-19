@@ -12,7 +12,7 @@ metadata:
   annotations:
     custom/visible: 'true'
 spec:
-  owner: group:royalmail/devops
+  owner: group:royalmail/data
   type: test
 
   parameters:
