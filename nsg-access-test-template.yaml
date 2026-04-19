@@ -42,12 +42,14 @@ spec:
         data:
           relations: ${{ steps['fetch-access-group'].output.entity.relations }}
           userRef: ${{ user.ref }}
+          groupRef: ${{ steps['fetch-access-group'].output.entity.metadata.namespace }}:${{ steps['fetch-access-group'].output.entity.metadata.name }}
         expression: |
           (
             $ur := userRef;
+            $gr := groupRef;
             $count(relations[type = "hasMember" and $lowercase(targetRef) = $lowercase($ur)]) > 0
               ? { "authorized": true, "user": $ur }
-              : $error("Access denied: " & $ur & " is not a member of group:royalmail/data. Contact the DevOps team to request access.")
+              : $error("Access denied: " & $ur & " is not a member of " & $gr & ". Contact the DevOps team to request access.")
           )
 
     - id: confirm-access
