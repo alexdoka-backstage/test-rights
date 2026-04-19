@@ -11,6 +11,7 @@ metadata:
     - access-control
   annotations:
     custom/visible: 'true'
+    custom/access-group: data
 spec:
   owner: group:royalmail/data
   type: test
