@@ -35,22 +35,6 @@ spec:
       input:
         entityRef: group:royalmail/data
 
-    - id: debug-group
-      name: Debug group entity
-      action: roadiehq:utils:jsonata
-      input:
-        data:
-          relations: ${{ steps['fetch-access-group'].output.entity.relations }}
-          userRef: ${{ user.ref }}
-        expression: |
-          {
-            "totalRelations": $count(relations),
-            "hasMemberCount": $count(relations[type = "hasMember"]),
-            "firstHasMember": relations[type = "hasMember"][0].targetRef,
-            "exactMatch": $count(relations[type = "hasMember" and targetRef = userRef]),
-            "lowerMatch": $count(relations[type = "hasMember" and $lowercase(targetRef) = $lowercase(userRef)])
-          }
-
     - id: check-access-group
       name: Verify caller is authorised
       action: roadiehq:utils:jsonata
@@ -59,9 +43,12 @@ spec:
           relations: ${{ steps['fetch-access-group'].output.entity.relations }}
           userRef: ${{ user.ref }}
         expression: |
-          $count(relations[type = "hasMember" and $lowercase(targetRef) = $lowercase(userRef)]) > 0
-            ? { "authorized": true, "user": userRef }
-            : $error("Access denied: " & userRef & " is not a member of group:royalmail/data. Contact the DevOps team to request access.")
+          (
+            $ur := userRef;
+            $count(relations[type = "hasMember" and $lowercase(targetRef) = $lowercase($ur)]) > 0
+              ? { "authorized": true, "user": $ur }
+              : $error("Access denied: " & $ur & " is not a member of group:royalmail/data. Contact the DevOps team to request access.")
+          )
 
     - id: confirm-access
       name: Confirm access granted
