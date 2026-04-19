@@ -1,0 +1,65 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: nsg-access-control-test
+  title: TEST - NSG Access Control Guardrail
+  description: >
+    Minimal test template for verifying group-based access control.
+    No resources are created. Fails if the caller is not a member of the required group.
+  tags:
+    - test
+    - access-control
+  annotations:
+    custom/visible: 'true'
+spec:
+  owner: group:royalmail/devops
+  type: test
+
+  parameters:
+    - title: Access Control Test
+      description: >
+        This template verifies the group membership guardrail.
+        No Azure resources or repositories will be created.
+      properties:
+        testNote:
+          title: Test note (optional)
+          type: string
+          ui:widget: textarea
+          ui:placeholder: 'e.g., Testing ALLOW rights'
+
+  steps:
+
+    - id: fetch-access-group
+      name: Fetch access control group
+      action: catalog:fetch
+      input:
+        entityRef: group:royalmail/data
+
+    - id: debug-group
+      name: Debug group entity
+      action: debug:log
+      input:
+        message: "Relations count: ${{ steps['fetch-access-group'].output.entity.relations | length }}, userRef: ${{ user.ref }}"
+
+    - id: check-access-group
+      name: Verify caller is authorised
+      action: roadiehq:utils:jsonata
+      input:
+        data:
+          relations: ${{ steps['fetch-access-group'].output.entity.relations }}
+          userRef: ${{ user.ref }}
+        expression: |
+          $count(relations[type = "hasMember" and $lowercase(targetRef) = $lowercase(userRef)]) > 0
+            ? { "authorized": true, "user": userRef }
+            : $error("Access denied: " & userRef & " is not a member of group:royalmail/data. Contact the DevOps team to request access.")
+
+    - id: confirm-access
+      name: Confirm access granted
+      action: debug:log
+      input:
+        message: "Access granted for ${{ user.ref }}"
+
+  output:
+    text:
+      - title: Result
+        content: "**Access granted** for `${{ user.ref }}`"
