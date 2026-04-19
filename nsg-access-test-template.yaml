@@ -33,7 +33,7 @@ spec:
       name: Fetch access control group
       action: catalog:fetch
       input:
-        entityRef: group:royalmail/devops
+        entityRef: group:royalmail/data
 
     - id: check-access-group
       name: Verify caller is authorised
