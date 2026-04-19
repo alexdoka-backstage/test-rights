@@ -37,9 +37,19 @@ spec:
 
     - id: debug-group
       name: Debug group entity
-      action: debug:log
+      action: roadiehq:utils:jsonata
       input:
-        message: "Relations count: ${{ steps['fetch-access-group'].output.entity.relations | length }}, userRef: ${{ user.ref }}"
+        data:
+          relations: ${{ steps['fetch-access-group'].output.entity.relations }}
+          userRef: ${{ user.ref }}
+        expression: |
+          {
+            "totalRelations": $count(relations),
+            "hasMemberCount": $count(relations[type = "hasMember"]),
+            "firstHasMember": relations[type = "hasMember"][0].targetRef,
+            "exactMatch": $count(relations[type = "hasMember" and targetRef = userRef]),
+            "lowerMatch": $count(relations[type = "hasMember" and $lowercase(targetRef) = $lowercase(userRef)])
+          }
 
     - id: check-access-group
       name: Verify caller is authorised
